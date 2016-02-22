@@ -11,8 +11,9 @@ import termui
 import click
 import requests
 import signal
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
-version = '0.0.26'
+version = '0.0.29'
 
 login_endpoint = "/v1/user/login"
 node_list_endpoint = "/v1/nodes/list"
@@ -23,6 +24,7 @@ nodes_delete_endpoint = "/v1/nodes/delete"
 node_resources_endpoint = "/v1/node/resources"
 
 verify = False
+
 class Wio(object):
 
     def __init__(self):
@@ -73,6 +75,9 @@ def cli(ctx):
     ctx.obj.config = config
 
     signal.signal(signal.SIGINT, sigint_handler)
+
+    if not verify:
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 def login_server(wio):
     while True:
@@ -197,7 +202,7 @@ def list(wio):
         thread.stop('')
         thread.join()
         if r.status_code == 400:
-            error = json_response.get("error", None)
+            error = r.json().get("error", None)
             click.secho(">> %s" %error, fg='red')
         else:
             click.secho(">> %s" %e, fg='red')
@@ -222,7 +227,7 @@ def list(wio):
                 thread.stop('')
                 thread.join()
                 if r.status_code == 400:
-                    error = json_response.get("error", None)
+                    error = r.json().get("error", None)
                     click.secho(">> %s" %error, fg='red')
                 else:
                     click.secho(">> %s" %e, fg='red')
@@ -240,21 +245,24 @@ def list(wio):
                 r.raise_for_status()
                 json_response = r.json()
             except requests.exceptions.HTTPError as e:
-                thread.stop('')
-                thread.join()
+                # thread.stop('')
+                # thread.join()
                 if r.status_code == 400:
-                    error = json_response.get("error", None)
+                    error = r.json().get("error", None)
                     click.secho(">> %s" %error, fg='red')
                 else:
                     click.secho(">> %s" %e, fg='red')
-                return
+                n['well_known'] = []
+                # n['onoff'] = 'offline'
             except Exception as e:
-                thread.stop('')
-                thread.join()
+                # thread.stop('')
+                # thread.join()
                 click.secho(">> %s" %e, fg='red')
-                return
-            well_known = json_response["well_known"] #todo error risk
-            n['well_known'] = well_known
+                n['well_known'] = []
+            else:
+                well_known = json_response["well_known"] #todo error risk
+                n['well_known'] = well_known
+
             n['onoff'] = 'online'
         else:
             n['well_known'] = []
@@ -311,9 +319,9 @@ def call(wio, method, endpoint, token,):
         json_response = r.json()
     except requests.exceptions.HTTPError as e:
         if r.status_code == 400:
-            # error = json_response.get("error", None)
+            # error = r.json().get("error", None)
             # click.secho(">> %s" %error, fg='red')
-            click.echo(r.json)
+            click.echo(r.json())
         else:
             click.secho(">> %s" %e, fg='red')
         return
@@ -429,7 +437,7 @@ def setup(wio):
         thread.stop('')
         thread.join()
         if r.status_code == 400:
-            error = json_response.get("error", None)
+            error = r.json().get("error", None)
             click.secho(">> %s" %error, fg='red')
         else:
             click.secho(">> %s" %e, fg='red')
@@ -652,7 +660,7 @@ def setup(wio):
             thread.stop('')
             thread.join()
             if r.status_code == 400:
-                error = json_response.get("error", None)
+                error = r.json().get("error", None)
                 click.secho(">> %s" %error, fg='red')
             else:
                 click.secho(">> %s" %e, fg='red')
@@ -692,7 +700,7 @@ def setup(wio):
         thread.stop('')
         thread.join()
         if r.status_code == 400:
-            error = json_response.get("error", None)
+            error = r.json().get("error", None)
             click.secho(">> %s" %error, fg='red')
         else:
             click.secho(">> %s" %e, fg='red')
