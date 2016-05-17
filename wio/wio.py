@@ -501,7 +501,7 @@ def setup(wio):
         with serial.Serial(port, 115200, timeout=5) as ser:
             cmd = 'Blank?\r\n'
             ser.write(cmd.encode('utf-8'))
-            if 'Node' in ser.readline():
+            if b'Node' in ser.readline():
                 flag = True
     except serial.SerialException as e:
         thread.stop('')
@@ -535,7 +535,7 @@ def setup(wio):
                 with serial.Serial(port, 115200, timeout=5) as ser:
                     cmd = 'Blank?\r\n'
                     ser.write(cmd.encode('utf-8'))
-                    if 'Node' in ser.readline():
+                    if b'Node' in ser.readline():
                         flag = True
                         break
 
